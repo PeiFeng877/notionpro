@@ -379,85 +379,186 @@ function debounce(func, wait) {
   };
 }
 
-// 直接修改标题内容实现自动编号
+// 检测文本是否已有编号 - 改进版
+function hasNumbering(text) {
+  // 更精确的正则表达式，匹配各种编号格式：1.、1.1.、1.1.1. 等
+  return /^\s*(\d+\.)+\s+/.test(text);
+}
+
+// 从文本中清除已有编号
+function cleanExistingNumbering(text) {
+  const match = text.match(/^\s*(\d+\.)+\s+/);
+  if (match) {
+    return text.substring(match[0].length);
+  }
+  return text;
+}
+
+// 获取标题元素的层级
+function getHeadingLevel(element) {
+  if (!element) return 0;
+  
+  // 根据类名判断
+  if (element.classList.contains('notion-header-block')) {
+    return 1; // 一级标题
+  } else if (element.classList.contains('notion-sub_header-block')) {
+    return 2; // 二级标题
+  } else if (element.classList.contains('notion-sub_sub_header-block')) {
+    return 3; // 三级标题
+  }
+  
+  // 备用：根据标签名判断
+  if (element.tagName) {
+    const match = element.tagName.match(/^H(\d)$/i);
+    if (match) {
+      return parseInt(match[1]);
+    }
+  }
+  
+  return 0; // 无法确定层级
+}
+
+// 直接修改标题内容实现自动编号 - 优化版
 function applyNumbering() {
-  log('开始应用序号 (直接内容修改方法)');
+  log('开始应用序号 (优化版 - 整体处理)');
   
   try {
-    // 直接编辑标题内容，添加序号
-    applyDirectNumbering();
+    // 使用改进的一次性处理所有标题的方法
+    applyImprovedNumbering();
     
-    log('直接内容编号应用完成');
+    log('标题编号应用完成');
   } catch (e) {
     logError('应用序号过程中发生错误', e);
   }
 }
 
-// 直接编辑标题内容的函数
-function applyDirectNumbering() {
-  log('开始直接修改标题内容...');
+// 改进版标题编号方法 - 一次性处理所有标题
+function applyImprovedNumbering() {
+  log('开始改进版标题编号处理...');
   
-  // 获取所有标题元素
-  const h1Elements = document.querySelectorAll('.notion-header-block > div > h2');
-  const h2Elements = document.querySelectorAll('.notion-sub_header-block > div > h3');
-  const h3Elements = document.querySelectorAll('.notion-sub_sub_header-block > div > h3');
+  // 1. 收集所有标题元素
+  const headings = collectAllHeadings();
+  log(`收集到 ${headings.length} 个标题元素`);
   
-  log(`找到标题: 一级=${h1Elements.length}, 二级=${h2Elements.length}, 三级=${h3Elements.length}`);
+  if (headings.length === 0) {
+    log('未找到标题元素，跳过处理');
+    return;
+  }
   
-  // 重置计数器
-  let h1Counter = 0;
-  let h2Counter = 0;
-  let h3Counter = 0;
+  // 2. 按DOM顺序排序标题
+  sortHeadingsByDOMOrder(headings);
+  log('按DOM顺序排序标题元素完成');
   
-  // 处理一级标题
-  h1Elements.forEach(el => {
-    // 检查是否已有编号
-    if (!el.textContent.match(/^\d+\.\s/)) {
-      h1Counter++;
-      h2Counter = 0; // 重置下级计数器
-      h3Counter = 0;
+  // 3. 计算每个标题的正确编号
+  const headingsWithCorrectNumbers = calculateCorrectNumbers(headings);
+  log('计算标题正确编号完成');
+  
+  // 4. 比对当前编号与正确编号，只更新不正确的标题
+  let updatedCount = 0;
+  for (const heading of headingsWithCorrectNumbers) {
+    const correctPrefix = heading.correctNumber;
+    const currentText = heading.element.textContent;
+    
+    // 检查当前文本是否需要更新
+    if (!isNumberingCorrect(currentText, correctPrefix)) {
+      log(`更新标题 "${currentText}" 为 "${correctPrefix} ${cleanExistingNumbering(currentText)}"`);
       
-      // 保存原内容
-      const originalContent = el.textContent;
+      // 清除任何现有编号
+      const cleanedText = cleanExistingNumbering(currentText);
       
-      // 设置新内容
-      el.textContent = `${h1Counter}. ${originalContent}`;
+      // 应用正确的编号
+      heading.element.textContent = correctPrefix + ' ' + cleanedText;
       
-      // 触发输入事件
-      triggerInputEvent(el);
+      // 触发输入事件确保Notion保存内容
+      triggerInputEvent(heading.element);
       
-      log(`已编号一级标题: ${h1Counter}. ${originalContent}`);
-    } else {
-      log(`标题已有编号: ${el.textContent}`);
+      updatedCount++;
     }
-  });
+  }
   
-  // 处理二级标题
-  h2Elements.forEach(el => {
-    if (!el.textContent.match(/^\d+\.\d+\.\s/)) {
-      h2Counter++;
-      h3Counter = 0; // 重置下级计数器
-      
-      const originalContent = el.textContent;
-      el.textContent = `${h1Counter}.${h2Counter}. ${originalContent}`;
-      triggerInputEvent(el);
-      
-      log(`已编号二级标题: ${h1Counter}.${h2Counter}. ${originalContent}`);
-    }
-  });
+  log(`标题编号处理完成，更新了 ${updatedCount} 个标题`);
+}
+
+// 收集所有标题元素
+function collectAllHeadings() {
+  // 获取所有可能的标题元素
+  const h1Elements = Array.from(document.querySelectorAll('.notion-header-block > div > h2') || []);
+  const h2Elements = Array.from(document.querySelectorAll('.notion-sub_header-block > div > h3') || []);
+  const h3Elements = Array.from(document.querySelectorAll('.notion-sub_sub_header-block > div > h4') || []);
   
-  // 处理三级标题
-  h3Elements.forEach(el => {
-    if (!el.textContent.match(/^\d+\.\d+\.\d+\.\s/)) {
-      h3Counter++;
-      
-      const originalContent = el.textContent;
-      el.textContent = `${h1Counter}.${h2Counter}.${h3Counter}. ${originalContent}`;
-      triggerInputEvent(el);
-      
-      log(`已编号三级标题: ${h1Counter}.${h2Counter}.${h3Counter}. ${originalContent}`);
-    }
+  // 记录各级标题数量
+  log(`找到标题数量: 一级=${h1Elements.length}, 二级=${h2Elements.length}, 三级=${h3Elements.length}`);
+  
+  // 如果找到了三级标题，记录第一个三级标题的文本，用于确认
+  if (h3Elements.length > 0) {
+    log(`三级标题示例: "${h3Elements[0].textContent}"`);
+  }
+  
+  // 合并所有标题元素
+  const allHeadings = [
+    ...h1Elements.map(el => ({ element: el, level: 1 })),
+    ...h2Elements.map(el => ({ element: el, level: 2 })),
+    ...h3Elements.map(el => ({ element: el, level: 3 }))
+  ];
+  
+  return allHeadings;
+}
+
+// 按DOM顺序排序标题
+function sortHeadingsByDOMOrder(headings) {
+  headings.sort((a, b) => {
+    const position = a.element.compareDocumentPosition(b.element);
+    return position & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
   });
+}
+
+// 计算正确的标题编号
+function calculateCorrectNumbers(headings) {
+  // 初始化计数器
+  let currentH1 = 0;
+  let currentH2 = 0;
+  let currentH3 = 0;
+  
+  // 为每个标题计算正确的编号
+  return headings.map(heading => {
+    let correctNumber = '';
+    
+    switch (heading.level) {
+      case 1:
+        currentH1++;
+        currentH2 = 0; // 重置下级计数器
+        currentH3 = 0;
+        correctNumber = `${currentH1}.`;
+        break;
+      case 2:
+        // 如果没有前置的一级标题，使用1作为一级编号
+        if (currentH1 === 0) currentH1 = 1;
+        
+        currentH2++;
+        currentH3 = 0; // 重置下级计数器
+        correctNumber = `${currentH1}.${currentH2}.`;
+        break;
+      case 3:
+        // 如果没有前置的一级或二级标题，使用1作为默认编号
+        if (currentH1 === 0) currentH1 = 1;
+        if (currentH2 === 0) currentH2 = 1;
+        
+        currentH3++;
+        correctNumber = `${currentH1}.${currentH2}.${currentH3}.`;
+        break;
+    }
+    
+    return {
+      ...heading,
+      correctNumber
+    };
+  });
+}
+
+// 检查当前编号是否正确
+function isNumberingCorrect(currentText, correctPrefix) {
+  // 检查文本是否已经以正确的编号开头
+  return currentText.trim().startsWith(correctPrefix);
 }
 
 // 触发输入事件确保Notion保存内容
