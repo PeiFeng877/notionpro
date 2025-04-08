@@ -208,8 +208,15 @@ function isHeadingRelatedMutation(mutation) {
         if (isHeadingElement(node)) {
           return true;
         }
-        // 如果节点内部包含标题元素
-        if (node.querySelector && node.querySelector('h1, h2, h3, [class*="heading"]')) {
+        // 如果节点内部包含标题元素 - 修复：添加h4选择器以捕获三级标题变化
+        if (node.querySelector && node.querySelector('h1, h2, h3, h4, h5, h6, [class*="heading"]')) {
+          // 记录找到的标题元素类型
+          if (DEBUG) {
+            const headings = node.querySelectorAll('h1, h2, h3, h4, h5, h6, [class*="heading"]');
+            if (headings.length > 0) {
+              log(`检测到标题元素变化: ${headings.length}个元素 [${Array.from(headings).map(h => h.tagName).join(', ')}]`);
+            }
+          }
           return true;
         }
       }
@@ -221,10 +228,12 @@ function isHeadingRelatedMutation(mutation) {
       if (node.nodeType === Node.ELEMENT_NODE) {
         // 根据类名或标签名做简单判断
         if (node.tagName && /^H[1-6]$/i.test(node.tagName)) {
+          log(`检测到标题元素被移除: ${node.tagName}`);
           return true;
         }
         if (node.className && typeof node.className === 'string' && 
             (node.className.includes('heading') || node.className.includes('header'))) {
+          log(`检测到标题相关元素被移除: 类名包含'heading'或'header'`);
           return true;
         }
       }
