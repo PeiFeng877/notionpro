@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Notion自动标题序号</title>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      width: 300px;
+      padding: 15px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #37352f;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    h1 {
+      font-size: 18px;
+      margin: 0 0 10px 0;
+      text-align: center;
+    }
+    .description {
+      color: #787774;
+      font-size: 14px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .option-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+    }
+    .option-label {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    button {
+      width: 100%;
+      padding: 8px 12px;
+      margin-top: 5px;
+      background-color: #2eaadc;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #2090b8;
+    }
+    button:active {
+      background-color: #1a7a9c;
+    }
+    button.secondary {
+      background-color: #f5f5f5;
+      color: #37352f;
+      border: 1px solid #e6e6e6;
+    }
+    button.secondary:hover {
+      background-color: #ebebeb;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .3s;
+      border-radius: 34px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #2eaadc;
+    }
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+    .status {
+      margin-top: 15px;
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      text-align: center;
+      background-color: #f5f5f5;
+    }
+    .divider {
+      height: 1px;
+      background-color: #e6e6e6;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Notion自动标题序号</h1>
+    <p class="description">为Notion页面中的标题自动添加层级序号</p>
+    
+    <div class="divider"></div>
+    
+    <div class="option-row">
+      <span class="option-label">启用自动序号</span>
+      <label class="switch">
+        <input type="checkbox" id="autoNumbering">
+        <span class="slider"></span>
+      </label>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <button id="applyNow">立即应用序号</button>
+    <button id="removeNumbers" class="secondary">移除所有序号</button>
+    
+    <div id="status" class="status">
+      插件已就绪，请在Notion页面中使用
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html> 
