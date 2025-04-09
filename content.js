@@ -140,7 +140,7 @@ function setupMutationObserver() {
           } finally {
             isProcessing = false;
           }
-        }, 500)();
+        }, 5000)(); // 延长到5秒，给用户足够的时间输入标题内容
       } catch (e) {
         logError('防抖调用异常', e);
         isProcessing = false;
@@ -621,6 +621,106 @@ function removeNumbering() {
   // 注意：我们不会尝试移除已添加到标题内容中的编号
   // 因为这是永久性修改，移除它们可能会引起混淆
   log('注意：已添加到标题内容中的编号不会被移除');
+}
+
+// 应用自动编号到标题元素
+function applyNumberingToHeadings() {
+  try {
+    log('开始应用自动编号到标题');
+    
+    // 查找所有标题元素
+    const headings = findHeadings();
+    log(`找到${headings.length}个标题元素`);
+    
+    // 检查每个标题并应用编号
+    let levels = [0, 0, 0, 0, 0, 0]; // 对应6级标题的计数
+    
+    headings.forEach(function(heading) {
+      // 检查标题内容是否为空，如果为空则跳过
+      if (!heading.textContent.trim()) {
+        log('跳过空标题元素');
+        return;
+      }
+      
+      const level = getHeadingLevel(heading);
+      if (level > 0 && level <= 6) {
+        // 重置所有更高级别的计数
+        for (let i = level; i <= 5; i++) {
+          levels[i] = 0;
+        }
+        
+        // 增加当前级别的计数
+        levels[level - 1]++;
+        
+        // 生成序号字符串
+        let numberStr = '';
+        for (let i = 0; i < level; i++) {
+          numberStr += levels[i] + '.';
+        }
+        
+        // 添加序号
+        addNumberToHeading(heading, numberStr);
+      }
+    });
+    
+    log('应用自动编号完成');
+  } catch (e) {
+    logError('应用自动编号失败', e);
+  }
+}
+
+// 向标题添加序号
+function addNumberToHeading(heading, numberStr) {
+  try {
+    // 如果标题为空，则不添加序号
+    if (!heading.textContent.trim()) {
+      log('标题内容为空，跳过添加序号');
+      return;
+    }
+    
+    // 检查是否已经有序号
+    if (heading.textContent.trim().startsWith(numberStr)) {
+      log(`标题已有序号 "${numberStr}"，跳过`);
+      return;
+    }
+    
+    // 清除可能已存在的序号
+    const cleanedContent = cleanExistingNumbering(heading.textContent);
+    
+    // 添加序号
+    heading.textContent = numberStr + ' ' + cleanedContent;
+    
+    // 尝试保持光标位置在文本部分
+    try {
+      // 聚焦元素
+      heading.focus();
+      
+      // 创建一个范围并设置光标位置到序号之后
+      const range = document.createRange();
+      const sel = window.getSelection();
+      
+      // 查找文本节点
+      if (heading.firstChild && heading.firstChild.nodeType === Node.TEXT_NODE) {
+        // 设置光标到序号之后
+        const textNode = heading.firstChild;
+        const numberLength = numberStr.length + 1; // +1 是空格
+        range.setStart(textNode, numberLength);
+        range.collapse(true);
+        
+        // 应用选择
+        sel.removeAllRanges();
+        sel.addRange(range);
+        
+        log('光标位置设置到序号之后');
+      }
+    } catch (e) {
+      logError('设置光标位置失败', e);
+    }
+    
+    log(`成功添加序号 "${numberStr}" 到标题`);
+  } catch (e) {
+    logError('添加序号失败', e);
+  }
 }
 
 // 页面加载完成后初始化
