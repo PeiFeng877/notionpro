@@ -5,26 +5,31 @@
   <meta charset="UTF-8">
   <style>
     body {
-      width: 300px;
-      padding: 15px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      color: #37352f;
+      width: 280px;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      color: #000;
+      margin: 0;
+      background-color: #fff;
     }
     .container {
       display: flex;
       flex-direction: column;
-      gap: 15px;
+      gap: 18px;
     }
     h1 {
       font-size: 18px;
-      margin: 0 0 10px 0;
+      font-weight: 600;
+      margin: 0;
       text-align: center;
+      letter-spacing: -0.02em;
     }
     .description {
-      color: #787774;
-      font-size: 14px;
-      margin-bottom: 10px;
+      color: #666;
+      font-size: 13px;
+      margin: 0;
       text-align: center;
+      line-height: 1.5;
     }
     .option-row {
       display: flex;
@@ -38,35 +43,30 @@
     }
     button {
       width: 100%;
-      padding: 8px 12px;
+      padding: 10px 0;
       margin-top: 5px;
-      background-color: #2eaadc;
+      background-color: #000;
       color: white;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       cursor: pointer;
       font-size: 14px;
       font-weight: 500;
-      transition: background-color 0.2s;
+      transition: all 0.2s ease;
     }
     button:hover {
-      background-color: #2090b8;
+      background-color: #333;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     button:active {
-      background-color: #1a7a9c;
-    }
-    button.secondary {
-      background-color: #f5f5f5;
-      color: #37352f;
-      border: 1px solid #e6e6e6;
-    }
-    button.secondary:hover {
-      background-color: #ebebeb;
+      background-color: #111;
+      transform: translateY(0);
     }
     .switch {
       position: relative;
       display: inline-block;
-      width: 50px;
+      width: 46px;
       height: 24px;
     }
     .switch input {
@@ -97,23 +97,24 @@
       border-radius: 50%;
     }
     input:checked + .slider {
-      background-color: #2eaadc;
+      background-color: #000;
     }
     input:checked + .slider:before {
-      transform: translateX(26px);
+      transform: translateX(22px);
     }
     .status {
-      margin-top: 15px;
-      padding: 8px;
-      border-radius: 4px;
-      font-size: 12px;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 13px;
       text-align: center;
       background-color: #f5f5f5;
+      color: #666;
     }
     .divider {
       height: 1px;
-      background-color: #e6e6e6;
-      margin: 10px 0;
+      background-color: #eee;
+      margin: 5px 0;
     }
   </style>
 </head>
@@ -132,13 +133,10 @@
       </label>
     </div>
     
-    <div class="divider"></div>
-    
     <button id="applyNow">立即应用序号</button>
-    <button id="removeNumbers" class="secondary">移除所有序号</button>
     
     <div id="status" class="status">
-      插件已就绪，请在Notion页面中使用
+      自动序号功能已启用
     </div>
   </div>
   

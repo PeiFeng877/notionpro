@@ -41,7 +41,7 @@ function initialize() {
   // 获取保存的设置
   chrome.storage.sync.get('autoNumbering', function(data) {
     autoNumberingEnabled = data.autoNumbering || false;
-    log('自动序号功能状态:', autoNumberingEnabled ? '已启用' : '已禁用');
+    log('从存储中读取的自动编号状态:', autoNumberingEnabled ? '已启用' : '已禁用');
     
     if (autoNumberingEnabled) {
       log('准备应用序号');
@@ -60,6 +60,7 @@ function initialize() {
       case 'toggleAutoNumbering':
         autoNumberingEnabled = request.enabled;
         log('切换自动序号状态为:', autoNumberingEnabled ? '启用' : '禁用');
+        log('autoNumberingEnabled变量类型:', typeof autoNumberingEnabled);
         
         if (autoNumberingEnabled) {
           applyNumbering();
@@ -116,6 +117,7 @@ function setupMutationObserver() {
     }
     
     log(`MutationObserver触发 (第${observerCallCount}次, 距上次${timeSinceLastCall}ms)`);
+    log('当前自动编号状态:', autoNumberingEnabled ? '已启用' : '已禁用');
     log('变更详情:', mutations);
     
     // 记录包含标题元素相关变更的变更数
@@ -136,7 +138,12 @@ function setupMutationObserver() {
         // 使用防抖函数延迟执行，避免频繁更新
         debounce(function() {
           try {
-            applyNumbering();
+            log('防抖延迟结束，执行应用序号，当前自动编号状态:', autoNumberingEnabled ? '已启用' : '已禁用');
+            if (autoNumberingEnabled) {
+              applyNumbering();
+            } else {
+              log('自动编号已禁用，跳过应用序号');
+            }
           } finally {
             isProcessing = false;
           }
